@@ -1,19 +1,31 @@
 # src/data/make_dataset.py
 
+import os
+import sys
 import pandas as pd
 import numpy as np
 import random
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from src.decision_engine.constants import ZONE_BASE_PRICES
+
 # --- Configuration ---
+RANDOM_SEED = 42
+random.seed(RANDOM_SEED)
+np.random.seed(RANDOM_SEED)
 NUM_MATCHES = 10
 DAYS_IN_ADVANCE = 90
+ZONE_CAPACITIES = {
+    'VIP': 500,
+    'Lateral': 8000,
+    'Corner': 6000,
+    'Gol Nord': 9000,
+    'Gol Sud': 9000,
+}
 ZONES = {
-    'VIP': {'capacity': 500, 'base_price': 250},
-    'Lateral': {'capacity': 8000, 'base_price': 120},
-    'Corner': {'capacity': 6000, 'base_price': 90},
-    'Gol Nord': {'capacity': 9000, 'base_price': 75},
-    'Gol Sud': {'capacity': 9000, 'base_price': 75}
+    name: {'capacity': ZONE_CAPACITIES[name], 'base_price': ZONE_BASE_PRICES[name]}
+    for name in ZONE_BASE_PRICES
 }
 WEATHER_FORECASTS = ['Sunny', 'Windy', 'Rain']
 WEATHER_WEIGHTS = [0.70, 0.20, 0.10]
@@ -88,12 +100,27 @@ def generate_daily_data(match, excitement_factor):
                 elif weather == 'Windy':
                     weather_multiplier = 0.85
 
-            price_multiplier = 1 + (excitement_factor - 1) * 0.8
-            ticket_price = round(zone_info['base_price'] * price_multiplier * random.uniform(0.95, 1.15), 2)
-            sales_potential = (excitement_factor * time_urgency * weather_multiplier) / (1 + (ticket_price / zone_info['base_price']) / 10)
+            # Prices in the historical record reflect both a strategic baseline
+            # tied to excitement AND operational variation: A/B tests,
+            # promotions, last-minute discounts. The wide variation is what
+            # lets the model identify price elasticity from history alone.
+            strategic_multiplier = 0.85 + 0.30 * excitement_factor  # ~0.91 to 1.45
+            operational_noise = random.uniform(0.55, 1.65)
+            ticket_price = round(zone_info['base_price'] * strategic_multiplier * operational_noise, 2)
+
+            # Linear-demand model with a hard ceiling at 2.5x base. Yields a
+            # clean interior revenue optimum near ~1.25x base price; outside
+            # this range either elasticity dominates (high price -> ~zero sales)
+            # or capacity binds (low price -> ceiling). Steep enough that XGBoost
+            # can separate the price signal from other noise.
+            MAX_PRICE_RATIO = 2.5
+            price_ratio = ticket_price / zone_info['base_price']
+            price_effect = max(0.02, 1.0 - price_ratio / MAX_PRICE_RATIO)
+
+            sales_potential = excitement_factor * time_urgency * weather_multiplier * price_effect
             sales_potential *= (1 + web_visits / 50000)
             zone_appeal = ZONES[zone_name]['capacity'] / 9000
-            daily_sales = int(sales_potential * zone_appeal * random.uniform(0.7, 1.3) * 30)
+            daily_sales = int(sales_potential * zone_appeal * random.uniform(0.85, 1.15) * 30)
             daily_sales = min(daily_sales, available_seats)
             ticket_availability_pct = max(0, available_seats / zone_info['capacity'])
             
