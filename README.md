@@ -1,4 +1,4 @@
-# Dynamic Pricing Engine with HiTL
+# Dynamic Pricing with HiTL
 
 <p align="left">
   <img src="https://img.shields.io/badge/ML-Supervised-lightgrey" alt="ML">
