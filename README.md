@@ -1,5 +1,3 @@
-![Cover](./assets/dp-cover.jpeg)
-
 # Dynamic Pricing Engine with HiTL
 
 <p align="left">
