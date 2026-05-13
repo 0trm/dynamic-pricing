@@ -15,9 +15,32 @@ from src.models.predict_demand import DemandModel
 
 PROPOSALS_PATH = Path(config.BASE_DIR) / 'proposals.jsonl'
 
+ARTIFACTS = [
+    config.PROPHET_MODELS_PATH,
+    config.XGB_RESIDUAL_MODEL_PATH,
+    config.FEATURE_PIPELINE_PATH,
+]
+
 st.set_page_config(page_title="Dynamic Pricing Engine", layout="wide")
 st.title("Dynamic Pricing Engine")
 st.caption("Demand forecast + price optimization with a human-in-the-loop approval step.")
+
+
+def _missing_artifacts() -> bool:
+    return not all(os.path.exists(p) for p in ARTIFACTS) or not os.path.exists(config.SYNTHETIC_DATA_PATH)
+
+
+@st.cache_resource(show_spinner=False)
+def bootstrap_pipeline():
+    """Generate data + train the ensemble on first run (Streamlit Cloud has no joblibs)."""
+    if not _missing_artifacts():
+        return
+    from src.data import make_dataset
+    from src.models import train_demand_model
+    with st.spinner("First-time setup: generating synthetic data and training the ensemble (~30s)..."):
+        if not os.path.exists(config.SYNTHETIC_DATA_PATH):
+            make_dataset.main()
+        train_demand_model.main()
 
 
 @st.cache_resource
@@ -30,6 +53,8 @@ def load_engines():
 def load_data() -> pd.DataFrame:
     return pd.read_csv(config.SYNTHETIC_DATA_PATH)
 
+
+bootstrap_pipeline()
 
 try:
     sim_engine, opt_engine = load_engines()
