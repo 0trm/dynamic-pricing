@@ -1,9 +1,9 @@
 # Dynamic Pricing with HiTL
 
 <p align="left">
+  <a href="https://dynamic-pricing-0trm.streamlit.app/"><img src="https://img.shields.io/badge/Live%20demo-Streamlit-ff4b4b?logo=streamlit&logoColor=white" alt="Live demo"></a>
   <img src="https://img.shields.io/badge/ML-Supervised-lightgrey" alt="ML">
   <img src="https://img.shields.io/badge/Models-Prophet%20%2B%20XGBoost-lightgrey" alt="Models">
-  <a href="https://dynamic-pricing-0trm.streamlit.app/"><img src="https://img.shields.io/badge/Live%20demo-Streamlit-ff4b4b?logo=streamlit&logoColor=white" alt="Live demo"></a>
 </p>
 
 An ML-powered dynamic pricing and decision support system for ticket pricing in a sports stadium. The engine forecasts demand at any candidate price, grid-searches for the revenue-maximizing recommendation, and surfaces it on a one-click approval dashboard. The same architecture was deployed on a real club's ticketing data and delivered **+6% revenue per match** and **86% recommendation adoption** by the commercial team (see [Real-world deployment](#in-the-real-world-deployment) for the full results).
