@@ -21,8 +21,8 @@ make app          # open the human-in-the-loop Streamlit page
 
 ### Outline
 
-- [Holdout Results](#holdout-results-on-synthetic-data)
-- [Real-world Impact](#real-world-impact)
+- [Holdout results](#holdout-results-on-synthetic-data)
+- [Real-world impact](#real-world-impact)
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Dataset](#dataset)
@@ -31,7 +31,7 @@ make app          # open the human-in-the-loop Streamlit page
 
 ---
 
-## Holdout Results (on synthetic data)
+## Holdout results (on synthetic data)
 
 Produced by `make evaluate` against a 14-day per-series holdout. The ensemble is re-trained from scratch on the train split before predicting on the holdout, so the numbers below are leakage-free.
 
@@ -50,7 +50,7 @@ A common failure mode for demand models is to learn everything *except* the pric
 
 Latest run: **mean spread 11.6 tickets across the per-zone range**, **median optimal price €182** (well inside the search band), **0% violation rate**. The optimizer is making real decisions, not picking the ceiling.
 
-## Real-world Impact
+## Real-world impact
 
 > ℹ️ The numbers below come from a deployment on a confidential real-world dataset. They are **not** reproduced by this repository; the public code runs on a synthetic dataset designed to mirror the statistical structure of the original. Treat them as case-study evidence, not a benchmark.
 
@@ -94,7 +94,7 @@ The diagram below is the system context view. The central **Dynamic Pricing Engi
 <p align="center">
   <img src="./assets/dp-scd.png" alt="System Context Diagram" width="800">
   <br>
-  <em>Fig. 3: System Context Diagram — Dynamic Pricing System.</em>
+  <em>Fig. 3: System Context Diagram – Dynamic Pricing System.</em>
 </p>
 
 
@@ -117,7 +117,7 @@ The dataset simulates:
 | **External Factors**| `is_holiday`, `popular_concert_in_city`, `competitor_avg_price`, `flights_to_barcelona_index` | External events, competition, and tourism proxies. |
 | **Weather** | `weather_forecast` | Forecasted weather conditions for the match day. |
 
-> **`zone_historical_sales`** [Target Variable] — the historical number of tickets sold in a given zone-day. This is what the model predicts.
+> **`zone_historical_sales`** [Target Variable] – the historical number of tickets sold in a given zone-day. This is what the model predicts.
 
 `web_conversion_rate` is present in the CSV for completeness but is **deliberately dropped from the model's feature set** (`src/features/build_features.py`). It is defined as `sales / web_visits` in the generator, which is target leakage at decision time: at the moment we propose a price, the conversion rate at that price is precisely what we are trying to predict. Including it would inflate the headline metrics while breaking the optimizer's price-elasticity signal.
 
@@ -154,8 +154,8 @@ Answers: *"At a given price, how many tickets are we likely to sell?"*
 | Aspect | Description |
 | :--- | :--- |
 | **Model** | A hybrid **ensemble**: Prophet + XGBoost in a residual-fitting setup. |
-| **Stage A — Prophet** | One model per `(match_id, seat_zone)` series captures trend, weekly seasonality, and weekday/holiday effects via Prophet regressors. |
-| **Stage B — XGBoost** | A single XGBoost regressor is fit on Prophet's in-sample residuals using the full feature set (price, demand signals, external factors). |
+| **Stage A – Prophet** | One model per `(match_id, seat_zone)` series captures trend, weekly seasonality, and weekday/holiday effects via Prophet regressors. |
+| **Stage B – XGBoost** | A single XGBoost regressor is fit on Prophet's in-sample residuals using the full feature set (price, demand signals, external factors). |
 | **Prediction** | `final = clip(prophet_yhat + xgb_residual, 0, ∞)`. Implemented as a single `DemandModel.predict()` surface in `src/models/predict_demand.py`. |
 | **Why this split** | Prophet handles temporal structure cleanly; XGBoost picks up complex non-linear interactions Prophet cannot. The combination beats either alone on the holdout. |
 
@@ -176,9 +176,9 @@ Answers: *"What is the single best price to maximize total revenue?"*
 
 ### Validation (in the real-world deployment)
 
-In production, the engine was validated via segment-based **A/B tests**: a subset of seating zones used the dynamic engine (treatment), while the rest stayed on static pricing (control). Tests were run across matches of varying importance to ensure the lift wasn't an artifact of any single event. Result: a consistent **+6% lift in average revenue per match** with a **+4% sell-through rate** — confirming the model found market equilibrium rather than simply over-charging.
+In production, the engine was validated via segment-based **A/B tests**: a subset of seating zones used the dynamic engine (treatment), while the rest stayed on static pricing (control). Tests were run across matches of varying importance to ensure the lift wasn't an artifact of any single event. Result: a consistent **+6% lift in average revenue per match** with a **+4% sell-through rate** – confirming the model found market equilibrium rather than simply over-charging.
 
-*(This A/B analysis is not reproduced here — the public repo focuses on the predictive/optimization core, not the deployment infrastructure.)*
+*(This A/B analysis is not reproduced here – the public repo focuses on the predictive/optimization core, not the deployment infrastructure.)*
 
 
 ## Structure
@@ -227,6 +227,15 @@ python -m src.decision_engine.simulate
 python -m src.decision_engine.optimize
 ```
 
-The Streamlit page lets you pick a match and seat zone, see the recommended price with a revenue-vs-price curve, simulate any hypothetical price, and **approve** the recommendation — which appends a JSON line to `proposals.jsonl`. That's the HiTL loop in miniature.
+The Streamlit page lets you pick a match and seat zone, see the recommended price with a revenue-vs-price curve, simulate any hypothetical price, and **approve** the recommendation – which appends a JSON line to `proposals.jsonl`. That's the HiTL loop in miniature.
 
-<p align="center">🌐 © 2025 t.r.</p>
+---
+
+## License
+
+MIT
+
+<br>
+
+*Built ~~by~~ with AI.* <br>
+© 2026 trm
