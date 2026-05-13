@@ -3,7 +3,6 @@
 # Dynamic Pricing Engine with HiTL
 
 <p align="left">
-  <img src="https://img.shields.io/badge/License-MIT-lightgrey" alt="License">
   <img src="https://img.shields.io/badge/ML-Supervised-lightgrey" alt="ML">
   <img src="https://img.shields.io/badge/Models-Prophet%20%2B%20XGBoost-lightgrey" alt="Models">
   <a href="https://dynamic-pricing-0trm.streamlit.app/"><img src="https://img.shields.io/badge/Live%20demo-Streamlit-ff4b4b?logo=streamlit&logoColor=white" alt="Live demo"></a>
