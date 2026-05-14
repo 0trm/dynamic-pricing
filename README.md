@@ -1,4 +1,4 @@
-# Dynamic Pricing with HiTL
+# Dynamic pricing engine with HiTL
 
 <p align="left">
   <a href="https://dynamic-pricing-0trm.streamlit.app/"><img src="https://img.shields.io/badge/Live%20demo-Streamlit-ff4b4b?logo=streamlit&logoColor=white" alt="Live demo"></a>
@@ -142,7 +142,7 @@ Grid search over a **zone-aware** range of prices: `[0.5 × base_price, 2.5 × b
 </details>
 
 
-## The dataset
+## Dataset
 
 The repository ships a synthetically generated dataset engineered to mirror the complexity and statistical properties of a real ticketing environment: 10 matches of varied importance, a 90-day daily sales window per match, and up to 5 stadium zones per match (a small per-zone dropout probability removes some pairs to mimic real data gaps, yielding ~37-43 of the 50 possible series).
 
