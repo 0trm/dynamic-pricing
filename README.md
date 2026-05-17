@@ -186,7 +186,7 @@ The generation script unifies non-price demand drivers under a single **"Match E
 </details>
 
 
-## Repository layout
+## Repo tree
 
 ```bash
 dynamic-pricing/
