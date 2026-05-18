@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Models-Prophet%20%2B%20XGBoost-lightgrey" alt="Models">
 </p>
 
-An ML-powered dynamic pricing and decision support system for ticket pricing in a sports stadium. The engine forecasts demand at any candidate price, grid-searches for the revenue-maximizing recommendation, and surfaces it on a one-click approval dashboard. The same architecture was deployed on a real club's ticketing data and delivered **+6% revenue per match** and **86% recommendation adoption** by the commercial team (see [Real-world deployment](#in-the-real-world-deployment) for the full results).
+An ML-powered dynamic pricing and decision support system for ticket pricing in a sports stadium. The engine forecasts demand at any candidate price, grid-searches for the revenue-maximizing recommendation, and surfaces it on a one-click approval dashboard. The same architecture was deployed on a real club's ticketing data and delivered **+6% revenue per match** and **86% recommendation adoption** by the commercial team.
 
 <p align="center">
   <a href="https://dynamic-pricing-0trm.streamlit.app/"><img src="./assets/dp-app.png" alt="Streamlit HiTL page" width="900"></a>
