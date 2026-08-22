@@ -239,8 +239,3 @@ The Streamlit page lets you pick a match and seat zone, see the recommended pric
 ## License
 
 MIT
-
-<br>
-
-*Built ~~by~~ with AI.* <br>
-© trm
