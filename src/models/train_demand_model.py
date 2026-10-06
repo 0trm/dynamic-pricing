@@ -6,15 +6,16 @@ temporal core (trend, weekly seasonality, holidays, weekday effect).
 Stage B: XGBoost is fit on Prophet's in-sample residuals using the full
 feature set (price, demand signals, external factors). Final prediction
 is Prophet yhat + XGBoost residual.
+
+Cold start: a pooled XGBoost fit directly on sales, with the same features,
+serves series that have no Prophet model yet (a match that just went on sale).
 """
 
-import json
 import logging
 import os
 import sys
 import warnings
 
-import joblib
 import numpy as np
 import pandas as pd
 from prophet import Prophet
@@ -26,6 +27,7 @@ sys.path.insert(0, project_root)
 import config
 from src.decision_engine.constants import PRICE_SUPPORT_QUANTILES
 from src.features.build_features import build_feature_pipeline
+from src.models.predict_demand import DemandModel
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logging.getLogger('prophet').setLevel(logging.WARNING)
@@ -91,8 +93,8 @@ def price_support(df: pd.DataFrame) -> dict[str, tuple[int, int]]:
     return {zone: (int(round(row[lo_q])), int(round(row[hi_q]))) for zone, row in bands.iterrows()}
 
 
-def train_ensemble(df: pd.DataFrame) -> tuple[dict, object, XGBRegressor]:
-    """Fit the full ensemble on `df`. Returns (prophet_bundle, feature_pipeline, xgb)."""
+def train_ensemble(df: pd.DataFrame) -> DemandModel:
+    """Fit the full ensemble, the cold-start model and the price bands on `df`."""
     df = add_ds_column(df)
     logging.info("Stage A: fitting Prophet on %d series", df.groupby(['match_id', 'seat_zone']).ngroups)
     prophet_models, prophet_yhat = fit_prophet_per_series(df)
@@ -107,30 +109,32 @@ def train_ensemble(df: pd.DataFrame) -> tuple[dict, object, XGBRegressor]:
     xgb = XGBRegressor(**XGB_PARAMS)
     xgb.fit(X, residuals.values)
 
+    logging.info("Cold start: fitting pooled XGBoost on sales")
+    pooled_xgb = XGBRegressor(**XGB_PARAMS)
+    pooled_xgb.fit(X, df[config.TARGET_COLUMN].values)
+
     prophet_bundle = {
         'series_models': prophet_models,
         'regressors': PROPHET_REGRESSORS,
         'reference_match_date': config.REFERENCE_MATCH_DATE,
         'days_between_matches': config.DAYS_BETWEEN_MATCHES,
     }
-    return prophet_bundle, feature_pipeline, xgb
+    return DemandModel(
+        prophet_bundle=prophet_bundle,
+        feature_pipeline=feature_pipeline,
+        xgb=xgb,
+        pooled_xgb=pooled_xgb,
+        price_support=price_support(df),
+    )
 
 
 def main() -> None:
     logging.info("Loading synthetic data from %s", config.SYNTHETIC_DATA_PATH)
     df = pd.read_csv(config.SYNTHETIC_DATA_PATH)
-    prophet_bundle, feature_pipeline, xgb = train_ensemble(df)
-
-    os.makedirs(config.MODELS_DIR, exist_ok=True)
-    joblib.dump(prophet_bundle, config.PROPHET_MODELS_PATH)
-    joblib.dump(feature_pipeline, config.FEATURE_PIPELINE_PATH)
-    joblib.dump(xgb, config.XGB_RESIDUAL_MODEL_PATH)
-    support = price_support(df)
-    with open(config.PRICE_SUPPORT_PATH, 'w') as f:
-        json.dump(support, f, indent=2)
-    logging.info("Optimizer price bands (observed p5-p95 per zone): %s", support)
-    logging.info("Saved Prophet bundle, feature pipeline, and XGBoost residual model to %s", config.MODELS_DIR)
-
+    model = train_ensemble(df)
+    model.save()
+    logging.info("Optimizer price bands (observed p5-p95 per zone): %s", model.price_support)
+    logging.info("Saved the ensemble, cold-start model and price bands to %s", config.MODELS_DIR)
 
 if __name__ == '__main__':
     main()

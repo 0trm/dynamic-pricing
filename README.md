@@ -85,6 +85,17 @@ The **Dynamic Pricing Engine** ingests historical data from the **Club's Data Sy
 
 The baseline that matters is the last-7-days naive: the forecast anyone could make at the cutoff without a model. The ensemble's WAPE is **29% lower** than it. The XGBoost stage does the heavy lifting: on its own, trained directly on sales, it beats the ensemble on WAPE and MAE, while the ensemble edges it on R² and RMSE (fewer large misses). Prophet alone is worse than the naive. Reproducible with `RANDOM_SEED=42` in `src/data/make_dataset.py`.
 
+#### Cold start
+
+A match that just went on sale has no sales history, so per-series Prophet has no model for it. `make evaluate` leaves one match out at a time and prices it as an unseen fixture:
+
+| | WAPE (median across 10 matches) |
+| :--- | :--- |
+| Without a fallback (Prophet yhat = 0 + residual) | 89.8% |
+| **With the pooled XGBoost fallback** | **12.5%** |
+
+The fallback is an XGBoost trained directly on sales with the same features. On unseen matches its recommendations earn **94%** of the best achievable revenue.
+
 #### Decision quality
 
 Forecast accuracy is not the goal; the price is. Because the data is synthetic, the true price response is known (`price_effect` in `src/data/make_dataset.py`, optimum at **1.25× base price**), so `make evaluate` also scores every holdout recommendation by the share of the best achievable revenue it earns:
@@ -125,7 +136,7 @@ Two stages: first **predict**, then **optimize**.
 
 ### Stage 1 – Demand forecasting
 
-A Prophet + XGBoost residual ensemble. One Prophet model per `(match_id, seat_zone)` series captures temporal structure (trend, weekly seasonality, weekday/holiday effects). A single XGBoost regressor then fits Prophet's in-sample residuals using the full feature set (price, demand signals, external factors), picking up the non-linear interactions Prophet misses. The ensemble has the lowest RMSE on the holdout; the XGBoost stage alone has the lowest WAPE (see Results). The unified prediction surface lives in `src/models/predict_demand.py` as `DemandModel.predict()`.
+A Prophet + XGBoost residual ensemble. One Prophet model per `(match_id, seat_zone)` series captures temporal structure (trend, weekly seasonality, weekday/holiday effects). A single XGBoost regressor then fits Prophet's in-sample residuals using the full feature set (price, demand signals, external factors), picking up the non-linear interactions Prophet misses. A third model, XGBoost trained directly on sales, serves series with no history yet (cold start, see Results). The ensemble has the lowest RMSE on the holdout; the XGBoost stage alone has the lowest WAPE (see Results). The unified prediction surface lives in `src/models/predict_demand.py` as `DemandModel.predict()`.
 
 <details>
 <summary>Click for design choices and trade-offs (Stage 1)</summary>
@@ -134,7 +145,7 @@ A Prophet + XGBoost residual ensemble. One Prophet model per `(match_id, seat_zo
 | :--- | :--- |
 | **Stage A – Prophet** | One model per `(match_id, seat_zone)` series captures trend, weekly seasonality, and weekday/holiday effects via Prophet regressors. |
 | **Stage B – XGBoost** | A single XGBoost regressor is fit on Prophet's in-sample residuals using the full feature set. |
-| **Prediction** | `final = clip(prophet_yhat + xgb_residual, 0, ∞)`. |
+| **Prediction** | `final = clip(prophet_yhat + xgb_residual, 0, ∞)`; for a series with no Prophet model, `final = clip(xgb_pooled, 0, ∞)`. |
 | **Why this split** | Prophet handles temporal structure cleanly; XGBoost picks up complex non-linear interactions Prophet cannot. On this holdout the XGBoost stage alone is more accurate on WAPE/MAE and the ensemble on RMSE/R²; see Results. |
 
 </details>
@@ -215,6 +226,7 @@ dynamic-pricing/
 ├── models/                             # Trained artifacts (regenerable, gitignored)
 │   ├── prophet_models.joblib
 │   ├── xgb_residual_model.joblib
+│   ├── xgb_pooled_model.joblib         # Cold-start model for series with no history
 │   ├── feature_pipeline.joblib
 │   └── price_support.json              # Per-zone price band the optimizer may search
 └── src/
@@ -224,8 +236,8 @@ dynamic-pricing/
     │   └── build_features.py           # Pipeline factory: drops, scales, one-hot encodes
     ├── models/
     │   ├── train_demand_model.py       # Fits Prophet + XGBoost ensemble
-    │   ├── predict_demand.py           # DemandModel: unified predict() surface
-    │   ├── evaluate.py                 # Leakage-free holdout metrics + decision quality
+    │   ├── predict_demand.py           # DemandModel: predict(), save(), load()
+    │   ├── evaluate.py                 # Holdout metrics, decision quality, cold start
     │   └── sanity_check.py             # Asserts the model actually responds to price
     └── decision_engine/
         ├── simulate.py                 # What-if for a single price

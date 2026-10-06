@@ -10,6 +10,7 @@ SYNTHETIC_DATA_PATH = os.path.join(DATA_DIR, '03_synthetic', 'synthetic_match_da
 MODELS_DIR = os.path.join(BASE_DIR, 'models')
 PROPHET_MODELS_PATH = os.path.join(MODELS_DIR, 'prophet_models.joblib')
 XGB_RESIDUAL_MODEL_PATH = os.path.join(MODELS_DIR, 'xgb_residual_model.joblib')
+POOLED_XGB_PATH = os.path.join(MODELS_DIR, 'xgb_pooled_model.joblib')
 FEATURE_PIPELINE_PATH = os.path.join(MODELS_DIR, 'feature_pipeline.joblib')
 PRICE_SUPPORT_PATH = os.path.join(MODELS_DIR, 'price_support.json')
 
