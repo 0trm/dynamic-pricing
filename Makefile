@@ -1,4 +1,4 @@
-.PHONY: data train evaluate sanity app all clean
+.PHONY: data train evaluate sanity test app all clean
 
 PYTHON ?= python
 
@@ -13,6 +13,9 @@ evaluate:
 
 sanity:
 	$(PYTHON) -m src.models.sanity_check
+
+test:
+	$(PYTHON) -m pytest -q tests
 
 app:
 	streamlit run app.py

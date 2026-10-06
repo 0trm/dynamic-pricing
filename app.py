@@ -2,7 +2,7 @@
 
 import json
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -128,7 +128,7 @@ sc2.metric("Projected revenue", f"€{sim['projected_revenue']:,.0f}")
 st.divider()
 if st.button("✓ Approve recommended price", type="primary"):
     proposal = {
-        'timestamp': datetime.utcnow().isoformat(),
+        'timestamp': datetime.now(UTC).isoformat(),
         'match_id': int(match_id),
         'seat_zone': seat_zone,
         'days_until_match': int(days_until_match),
