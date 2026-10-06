@@ -73,16 +73,17 @@ The **Dynamic Pricing Engine** ingests historical data from the **Club's Data Sy
 
 ### In this repo (synthetic data)
 
-`make evaluate` runs a 14-day per-series holdout. The ensemble is re-trained from scratch on the train split before predicting on the holdout, so the numbers below are leakage-free.
+`make evaluate` runs a 14-day per-series holdout. Every model is re-trained from scratch on the train split before predicting on the holdout, so the numbers below are leakage-free. "MAE vs. naive" divides each MAE by the last-7-days naive's; below 1 beats it.
 
-| Metric | Ensemble (Prophet + XGBoost) | Baseline (mean) |
-| :--- | :--- | :--- |
-| **WAPE** | **26.4%** | 79.7% |
-| **R²** | **0.729** | -0.428 |
-| **MAE** | **6.2** tickets | 18.6 tickets |
-| **RMSE** | **11.7** tickets | 27.0 tickets |
+| Model | WAPE | R² | MAE | RMSE | MAE vs. naive |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Ensemble (Prophet + XGBoost)** | **26.4%** | **0.729** | 6.2 | **11.7** | 0.71 |
+| Prophet only | 41.8% | 0.483 | 9.8 | 16.2 | 1.12 |
+| XGBoost only (pooled, on sales) | **22.6%** | 0.717 | **5.3** | 12.0 | **0.60** |
+| Naive: last 7 days per series | 37.4% | 0.544 | 8.7 | 15.2 | 1.00 |
+| Naive: global mean | 79.7% | -0.428 | 18.6 | 27.0 | 2.13 |
 
-The ensemble's WAPE is **67% lower** than the mean baseline. Reproducible with `RANDOM_SEED=42` in `src/data/make_dataset.py`.
+The baseline that matters is the last-7-days naive: the forecast anyone could make at the cutoff without a model. The ensemble's WAPE is **29% lower** than it. The XGBoost stage does the heavy lifting: on its own, trained directly on sales, it beats the ensemble on WAPE and MAE, while the ensemble edges it on R² and RMSE (fewer large misses). Prophet alone is worse than the naive. Reproducible with `RANDOM_SEED=42` in `src/data/make_dataset.py`.
 
 #### Decision quality
 
@@ -124,7 +125,7 @@ Two stages: first **predict**, then **optimize**.
 
 ### Stage 1 – Demand forecasting
 
-A Prophet + XGBoost residual ensemble. One Prophet model per `(match_id, seat_zone)` series captures temporal structure (trend, weekly seasonality, weekday/holiday effects). A single XGBoost regressor then fits Prophet's in-sample residuals using the full feature set (price, demand signals, external factors), picking up the non-linear interactions Prophet misses. The combination beats either alone on the holdout. The unified prediction surface lives in `src/models/predict_demand.py` as `DemandModel.predict()`.
+A Prophet + XGBoost residual ensemble. One Prophet model per `(match_id, seat_zone)` series captures temporal structure (trend, weekly seasonality, weekday/holiday effects). A single XGBoost regressor then fits Prophet's in-sample residuals using the full feature set (price, demand signals, external factors), picking up the non-linear interactions Prophet misses. The ensemble has the lowest RMSE on the holdout; the XGBoost stage alone has the lowest WAPE (see Results). The unified prediction surface lives in `src/models/predict_demand.py` as `DemandModel.predict()`.
 
 <details>
 <summary>Click for design choices and trade-offs (Stage 1)</summary>
@@ -134,7 +135,7 @@ A Prophet + XGBoost residual ensemble. One Prophet model per `(match_id, seat_zo
 | **Stage A – Prophet** | One model per `(match_id, seat_zone)` series captures trend, weekly seasonality, and weekday/holiday effects via Prophet regressors. |
 | **Stage B – XGBoost** | A single XGBoost regressor is fit on Prophet's in-sample residuals using the full feature set. |
 | **Prediction** | `final = clip(prophet_yhat + xgb_residual, 0, ∞)`. |
-| **Why this split** | Prophet handles temporal structure cleanly; XGBoost picks up complex non-linear interactions Prophet cannot. The combination beats either alone on the holdout. |
+| **Why this split** | Prophet handles temporal structure cleanly; XGBoost picks up complex non-linear interactions Prophet cannot. On this holdout the XGBoost stage alone is more accurate on WAPE/MAE and the ensemble on RMSE/R²; see Results. |
 
 </details>
 
