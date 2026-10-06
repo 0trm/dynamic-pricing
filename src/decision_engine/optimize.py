@@ -10,26 +10,19 @@ import pandas as pd
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, project_root)
 
-from src.decision_engine.constants import (
-    PRICE_SEARCH_RANGE_RATIO,
-    SAMPLE_BASE_FEATURES,
-    ZONE_BASE_PRICES,
-)
+from src.decision_engine.constants import SAMPLE_BASE_FEATURES
 from src.models.predict_demand import DemandModel
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-def default_price_range_for(seat_zone: str) -> tuple[int, int]:
-    """Bounds derived from the zone's base price and the training distribution band."""
-    base = ZONE_BASE_PRICES[seat_zone]
-    lo, hi = PRICE_SEARCH_RANGE_RATIO
-    return int(round(base * lo)), int(round(base * hi))
-
-
 class OptimizationEngine:
     def __init__(self, model: DemandModel | None = None):
         self.model = model or DemandModel.load()
+
+    def price_range_for(self, seat_zone: str) -> tuple[int, int]:
+        """Prices the zone was actually sold at in training (p5-p95); the model is not trusted outside them."""
+        return self.model.price_support[seat_zone]
 
     def revenue_curve(
         self,
@@ -40,15 +33,31 @@ class OptimizationEngine:
         """Vectorized: build one batch of candidate-price rows, predict once, return prices × revenue table."""
         base_row = base_features.iloc[0].to_dict()
         if price_range is None:
-            price_range = default_price_range_for(base_row['seat_zone'])
+            price_range = self.price_range_for(base_row['seat_zone'])
         lo, hi = price_range
         prices = np.arange(lo, hi + 1, step)
 
         batch = pd.DataFrame([{**base_row, 'ticket_price': float(p)} for p in prices])
         sales = self.model.predict(batch)
-        sales = np.maximum(0, np.round(sales)).astype(int)
+        # Revenue from unrounded sales: in low-volume zones (VIP sells 0-3 a day) rounding
+        # flattens the curve to zero and the argmax falls back to the lowest price.
         revenue = prices * sales
-        return pd.DataFrame({'price': prices, 'predicted_sales': sales, 'projected_revenue': revenue})
+        return pd.DataFrame({'price': prices, 'predicted_sales': np.round(sales).astype(int), 'projected_revenue': revenue})
+
+    def recommend_prices(self, features: pd.DataFrame, step: int = 5) -> np.ndarray:
+        """Revenue-maximizing price for every row, in one prediction batch (used by evaluate.py)."""
+        rows = features.reset_index(drop=True)
+        candidates = []
+        for i, zone in rows['seat_zone'].items():
+            lo, hi = self.price_range_for(zone)
+            candidates.append(pd.DataFrame({'row': i, 'ticket_price': np.arange(lo, hi + 1, step, dtype=float)}))
+        grid = pd.concat(candidates, ignore_index=True)
+        batch = rows.drop(columns=['ticket_price']).loc[grid['row']].reset_index(drop=True)
+        batch['ticket_price'] = grid['ticket_price']
+        batch = batch[rows.columns]
+        grid['revenue'] = grid['ticket_price'] * self.model.predict(batch)
+        best = grid.loc[grid.groupby('row')['revenue'].idxmax()]
+        return best.sort_values('row')['ticket_price'].to_numpy()
 
     def run_optimization(
         self,

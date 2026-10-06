@@ -27,6 +27,7 @@ ZONES = {
     name: {'capacity': ZONE_CAPACITIES[name], 'base_price': ZONE_BASE_PRICES[name]}
     for name in ZONE_BASE_PRICES
 }
+MAX_PRICE_RATIO = 2.5
 WEATHER_FORECASTS = ['Sunny', 'Windy', 'Rain']
 WEATHER_WEIGHTS = [0.70, 0.20, 0.10]
 ZONE_SKIP_PROBABILITY = {
@@ -39,6 +40,19 @@ ZONE_SKIP_PROBABILITY = {
 
 OUTPUT_DIR = Path(__file__).resolve().parents[2] / 'data/03_synthetic'
 OUTPUT_FILE = OUTPUT_DIR / 'synthetic_match_data.csv'
+
+
+def price_effect(price_ratio):
+    """Ground-truth price response: share of demand kept at `price / base_price`.
+
+    Linear demand with a hard ceiling at 2.5x base. Yields a clean interior
+    revenue optimum at 1.25x base price; outside this range either elasticity
+    dominates (high price -> ~zero sales) or capacity binds (low price ->
+    ceiling). Steep enough that XGBoost can separate the price signal from
+    other noise. No other demand driver depends on price, so evaluate.py uses
+    this function to score the optimizer's recommendations against the truth.
+    """
+    return np.maximum(0.02, 1.0 - np.asarray(price_ratio) / MAX_PRICE_RATIO)
 
 
 def generate_match_details(num_matches):
@@ -108,16 +122,8 @@ def generate_daily_data(match, excitement_factor):
             operational_noise = random.uniform(0.55, 1.65)
             ticket_price = round(zone_info['base_price'] * strategic_multiplier * operational_noise, 2)
 
-            # Linear-demand model with a hard ceiling at 2.5x base. Yields a
-            # clean interior revenue optimum near ~1.25x base price; outside
-            # this range either elasticity dominates (high price -> ~zero sales)
-            # or capacity binds (low price -> ceiling). Steep enough that XGBoost
-            # can separate the price signal from other noise.
-            MAX_PRICE_RATIO = 2.5
-            price_ratio = ticket_price / zone_info['base_price']
-            price_effect = max(0.02, 1.0 - price_ratio / MAX_PRICE_RATIO)
-
-            sales_potential = excitement_factor * time_urgency * weather_multiplier * price_effect
+            sales_potential = excitement_factor * time_urgency * weather_multiplier
+            sales_potential *= price_effect(ticket_price / zone_info['base_price'])
             sales_potential *= (1 + web_visits / 50000)
             zone_appeal = ZONES[zone_name]['capacity'] / 9000
             daily_sales = int(sales_potential * zone_appeal * random.uniform(0.85, 1.15) * 30)

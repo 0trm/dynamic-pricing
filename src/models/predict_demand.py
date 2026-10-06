@@ -7,6 +7,7 @@ artifacts (`prophet_models.joblib`, `feature_pipeline.joblib`,
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import sys
@@ -29,6 +30,7 @@ class DemandModel:
     prophet_bundle: dict
     feature_pipeline: object
     xgb: object
+    price_support: dict[str, tuple[int, int]] | None = None  # zone -> (lo, hi) prices seen in training
 
     @classmethod
     def load(
@@ -36,11 +38,15 @@ class DemandModel:
         prophet_path: str = config.PROPHET_MODELS_PATH,
         pipeline_path: str = config.FEATURE_PIPELINE_PATH,
         xgb_path: str = config.XGB_RESIDUAL_MODEL_PATH,
+        support_path: str = config.PRICE_SUPPORT_PATH,
     ) -> 'DemandModel':
+        with open(support_path) as f:
+            support = {zone: tuple(band) for zone, band in json.load(f).items()}
         return cls(
             prophet_bundle=joblib.load(prophet_path),
             feature_pipeline=joblib.load(pipeline_path),
             xgb=joblib.load(xgb_path),
+            price_support=support,
         )
 
     def _match_date(self, match_id: int) -> pd.Timestamp:

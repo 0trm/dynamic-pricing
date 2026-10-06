@@ -77,14 +77,26 @@ The **Dynamic Pricing Engine** ingests historical data from the **Club's Data Sy
 
 | Metric | Ensemble (Prophet + XGBoost) | Baseline (mean) |
 | :--- | :--- | :--- |
-| **WAPE** | **26.7%** | 79.7% |
-| **R²** | **0.726** | -0.428 |
+| **WAPE** | **26.4%** | 79.7% |
+| **R²** | **0.729** | -0.428 |
 | **MAE** | **6.2** tickets | 18.6 tickets |
-| **RMSE** | **11.8** tickets | 27.0 tickets |
+| **RMSE** | **11.7** tickets | 27.0 tickets |
 
 The ensemble's WAPE is **67% lower** than the mean baseline. Reproducible with `RANDOM_SEED=42` in `src/data/make_dataset.py`.
 
-A common failure mode for demand models is to learn everything *except* the price-to-sales relationship, leaving the optimizer to recommend the price cap on every row. `make sanity` defends against this: it samples 20 historical rows, sweeps each through the optimizer's price range, and asserts that predicted sales move with price by at least 20% relative spread. Latest run: **mean spread 11.6 tickets across the per-zone range**, **median optimal price €182** (well inside the search band), **0% violation rate**.
+#### Decision quality
+
+Forecast accuracy is not the goal; the price is. Because the data is synthetic, the true price response is known (`price_effect` in `src/data/make_dataset.py`, optimum at **1.25× base price**), so `make evaluate` also scores every holdout recommendation by the share of the best achievable revenue it earns:
+
+| Metric | Value |
+| :--- | :--- |
+| **Share of best achievable revenue** | **95%** mean (Corner 98%, Gol Nord 97%, Gol Sud 97%, Lateral 94%, VIP 91%) |
+| **Median recommended price** | 1.52× base (true optimum 1.25×) |
+| **Recommendations at the band's upper edge** | 19% |
+
+An earlier version searched `0.5×–2.5×` base price, but no training row is priced above 1.91× base. Past that point the trees predict flat sales, revenue keeps rising with price, and 42% of recommendations landed at the cap, earning **45%** of the best achievable revenue. The optimizer now searches only the prices each zone was actually sold at (5th–95th percentile, computed at training time). The remaining upper-edge share means the model still underestimates how fast demand falls at high prices.
+
+`make sanity` guards against both failure modes: it samples 20 historical rows, sweeps each through the zone's band, and fails if predicted sales don't move with price (at least 20% relative spread, monotone within 2 tickets per step) or if more than 40% of optima sit at the band's upper edge. Latest run: **0% violations**, **35% at the upper edge**, **median optimal price €132**.
 
 ### In the real-world deployment
 
@@ -128,7 +140,7 @@ A Prophet + XGBoost residual ensemble. One Prophet model per `(match_id, seat_zo
 
 ### Stage 2 – Price optimization
 
-Grid search over a **zone-aware** range of prices: `[0.5 × base_price, 2.5 × base_price]`. Outside this band the model would be extrapolating beyond the training distribution and the residual XGBoost can't be trusted; the band is configurable in `src/decision_engine/constants.py` (`PRICE_SEARCH_RANGE_RATIO`). For each candidate price, the engine builds a row, predicts sales with `DemandModel`, computes `revenue = price × predicted_sales`, and returns the argmax. The result becomes a `Price Variation Proposal` sent to the commercial team for approval.
+Grid search over the prices each zone was **actually sold at**: the 5th–95th percentile of historical prices per zone, computed at training time and saved to `models/price_support.json` (quantiles configurable in `src/decision_engine/constants.py`, `PRICE_SUPPORT_QUANTILES`). Outside this band the model is extrapolating, the trees predict flat sales, and the argmax drifts to the cap. For each candidate price, the engine builds a row, predicts sales with `DemandModel`, computes `revenue = price × predicted_sales`, and returns the argmax. The result becomes a `Price Variation Proposal` sent to the commercial team for approval.
 
 <details>
 <summary>Click for design choices and trade-offs (Stage 2)</summary>
@@ -136,7 +148,7 @@ Grid search over a **zone-aware** range of prices: `[0.5 × base_price, 2.5 × b
 | Aspect | Description |
 | :--- | :--- |
 | **Why grid search** | Pricing is a critical business decision; grid search **guarantees** the revenue-maximizing price within the search space, at modest compute cost (one vectorized prediction batch per match-zone). |
-| **Process** | For each candidate price in the range, build a row, predict sales with `DemandModel`, compute `revenue = price × predicted_sales`, return the argmax. |
+| **Process** | For each candidate price in the range, build a row, predict sales with `DemandModel`, compute `revenue = price × predicted_sales` (unrounded, so low-volume zones keep a usable curve), return the argmax. |
 | **Why not Bayesian opt.** | Bayesian optimization would converge faster but doesn't guarantee the maximum. For pricing decisions, the guarantee is worth the modest extra cost. |
 
 </details>
@@ -202,7 +214,8 @@ dynamic-pricing/
 ├── models/                             # Trained artifacts (regenerable, gitignored)
 │   ├── prophet_models.joblib
 │   ├── xgb_residual_model.joblib
-│   └── feature_pipeline.joblib
+│   ├── feature_pipeline.joblib
+│   └── price_support.json              # Per-zone price band the optimizer may search
 └── src/
     ├── data/
     │   └── make_dataset.py             # Synthetic data generator (seeded)
@@ -211,12 +224,12 @@ dynamic-pricing/
     ├── models/
     │   ├── train_demand_model.py       # Fits Prophet + XGBoost ensemble
     │   ├── predict_demand.py           # DemandModel: unified predict() surface
-    │   ├── evaluate.py                 # Leakage-free holdout metrics
+    │   ├── evaluate.py                 # Leakage-free holdout metrics + decision quality
     │   └── sanity_check.py             # Asserts the model actually responds to price
     └── decision_engine/
         ├── simulate.py                 # What-if for a single price
         ├── optimize.py                 # Zone-aware grid-search optimal price
-        └── constants.py                # Sample feature row + zone base prices
+        └── constants.py                # Sample feature row, zone base prices, band quantiles
 ```
 
 ### Reproducing the results
@@ -224,7 +237,7 @@ dynamic-pricing/
 ```bash
 pip install -r requirements.txt
 make clean                              # remove cached artifacts
-make all                                # data + train + evaluate + sanity check
+make all                                # data + train + evaluate (accuracy + decision quality) + sanity check
 make app                                # launch the Streamlit page
 
 # Or run the CLI examples directly:
