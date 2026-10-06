@@ -18,6 +18,7 @@ PROPOSALS_PATH = Path(config.BASE_DIR) / 'proposals.jsonl'
 ARTIFACTS = [
     config.PROPHET_MODELS_PATH,
     config.XGB_RESIDUAL_MODEL_PATH,
+    config.POOLED_XGB_PATH,
     config.FEATURE_PIPELINE_PATH,
     config.PRICE_SUPPORT_PATH,
 ]

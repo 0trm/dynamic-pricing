@@ -14,17 +14,21 @@ is trained from scratch on the remaining 77 days per series to avoid leakage.
    price, revenue at price p is proportional to p * price_effect(p / base), so
    we can report the share of the best achievable revenue each recommendation
    earns. Zone capacity never binds in the synthetic data, so it is ignored.
+3. Cold start: leave one match out at a time, the way a new fixture is priced
+   the day it goes on sale. Per-series Prophet has no model for it, so the
+   pooled XGBoost serves it; the "residual only" row shows what happens without
+   that fallback.
 """
 
 import logging
 import os
 import sys
+from dataclasses import replace
 
 import numpy as np
 import pandas as pd
 from sklearn.dummy import DummyRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from xgboost import XGBRegressor
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, project_root)
@@ -33,9 +37,8 @@ import config
 from src.data.make_dataset import price_effect
 from src.decision_engine.constants import ZONE_BASE_PRICES
 from src.decision_engine.optimize import OptimizationEngine
-from src.features.build_features import build_feature_pipeline
 from src.models.predict_demand import DemandModel
-from src.models.train_demand_model import XGB_PARAMS, price_support, train_ensemble
+from src.models.train_demand_model import train_ensemble
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -82,23 +85,13 @@ def main() -> None:
     features_test = test_df.drop(columns=[config.TARGET_COLUMN])
 
     logging.info("Retraining ensemble on train split for unbiased evaluation...")
-    prophet_bundle, feature_pipeline, xgb = train_ensemble(train_df)
-    eval_model = DemandModel(
-        prophet_bundle=prophet_bundle,
-        feature_pipeline=feature_pipeline,
-        xgb=xgb,
-        price_support=price_support(train_df),
-    )
+    eval_model = train_ensemble(train_df)
     y_pred = eval_model.predict(features_test)
 
     features_reset = features_test.reset_index(drop=True)
-    y_prophet = np.clip(eval_model._prophet_forecast(features_reset), 0, None)
-
-    pooled_pipeline = build_feature_pipeline()
-    pooled = XGBRegressor(**XGB_PARAMS)
-    pooled.fit(pooled_pipeline.fit_transform(train_df.drop(columns=[config.TARGET_COLUMN])),
-               train_df[config.TARGET_COLUMN].values)
-    y_pooled = np.clip(pooled.predict(pooled_pipeline.transform(features_test)), 0, None)
+    y_prophet = np.clip(eval_model._prophet_forecast(features_reset)[0], 0, None)
+    X_test = eval_model.feature_pipeline.transform(features_reset)
+    y_pooled = np.clip(eval_model.pooled_xgb.predict(X_test), 0, None)
 
     recent = train_df[train_df['days_until_match'] < HOLDOUT_DAYS + 7]
     y_last7 = series_lookup(test_df, recent.groupby(SERIES)[config.TARGET_COLUMN].mean())
@@ -144,6 +137,34 @@ def main() -> None:
     print("By zone: " + ", ".join(f"{z} {v:.0%}" for z, v in by_zone.items()))
     print("------------------------------------------------------------------------------\n")
 
+    cold_start(df)
+
+
+def cold_start(df: pd.DataFrame) -> None:
+    """Leave-one-match-out: forecast and price a match the model has never seen."""
+    logging.info("Cold start: leave-one-match-out over %d matches...", df['match_id'].nunique())
+    logging.getLogger('src.models.predict_demand').setLevel(logging.ERROR)  # the no-fallback run warns by design
+    target = config.TARGET_COLUMN
+    rows, shares = [], []
+    for match_id in sorted(df['match_id'].unique()):
+        held_out = df['match_id'] == match_id
+        model = train_ensemble(df[~held_out])
+        features = df[held_out].drop(columns=[target]).reset_index(drop=True)
+        y_true = df.loc[held_out, target].to_numpy()
+        rows.append({
+            'match_id': match_id,
+            'fallback': wape(y_true, model.predict(features)),
+            'residual_only': wape(y_true, replace(model, pooled_xgb=None).predict(features)),
+        })
+        recommended = OptimizationEngine(model=model).recommend_prices(features)
+        shares.append(true_revenue_share(recommended, features['seat_zone']))
+    report = pd.DataFrame(rows)
+    print("--- Cold start (leave one match out: a fixture the model has never seen) ---")
+    print(f"WAPE with the pooled XGBoost fallback: {report['fallback'].median():.1%} median "
+          f"({report['fallback'].min():.1%}-{report['fallback'].max():.1%} across matches)")
+    print(f"WAPE without it (Prophet yhat = 0 + residual): {report['residual_only'].median():.1%} median")
+    print(f"Share of best achievable revenue on unseen matches: {np.concatenate(shares).mean():.0%}")
+    print("---------------------------------------------------------------------------\n")
 
 if __name__ == '__main__':
     main()
