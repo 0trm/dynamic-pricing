@@ -2,6 +2,7 @@
 
 <p align="left">
   <a href="https://dynamic-pricing-0trm.streamlit.app/"><img src="https://img.shields.io/badge/Live%20demo-Streamlit-ff4b4b?logo=streamlit&logoColor=white" alt="Live demo"></a>
+  <a href="https://github.com/0trm/dynamic-pricing/actions/workflows/ci.yml"><img src="https://github.com/0trm/dynamic-pricing/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/ML-Supervised-lightgrey" alt="ML">
   <img src="https://img.shields.io/badge/Models-Prophet%20%2B%20XGBoost-lightgrey" alt="Models">
 </p>
@@ -17,10 +18,13 @@ An ML-powered dynamic pricing and decision support system for ticket pricing in 
 ## Quickstart
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-dev.txt   # Python 3.12, pinned versions
 make all          # synthetic data, train, holdout evaluation, elasticity sanity check
+make test         # unit tests (optimizer bounds, cold start, save/load)
 make app          # open the human-in-the-loop Streamlit page locally
 ```
+
+CI runs `make all` and `make test` on every push. The live demo sleeps after 12 hours without traffic (a Streamlit Community Cloud rule), so the first visit may need a click to wake it and about a minute to train.
 
 ---
 
@@ -83,7 +87,7 @@ The **Dynamic Pricing Engine** ingests historical data from the **Club's Data Sy
 | Naive: last 7 days per series | 37.4% | 0.544 | 8.7 | 15.2 | 1.00 |
 | Naive: global mean | 79.7% | -0.428 | 18.6 | 27.0 | 2.13 |
 
-The baseline that matters is the last-7-days naive: the forecast anyone could make at the cutoff without a model. The ensemble's WAPE is **29% lower** than it. The XGBoost stage does the heavy lifting: on its own, trained directly on sales, it beats the ensemble on WAPE and MAE, while the ensemble edges it on R² and RMSE (fewer large misses). Prophet alone is worse than the naive. Reproducible with `RANDOM_SEED=42` in `src/data/make_dataset.py`.
+The baseline that matters is the last-7-days naive: the forecast anyone could make at the cutoff without a model. The ensemble's WAPE is **29% lower** than it. The XGBoost stage does the heavy lifting: on its own, trained directly on sales, it beats the ensemble on WAPE and MAE, while the ensemble edges it on R² and RMSE (fewer large misses). Prophet alone is worse than the naive. Reproducible with `RANDOM_SEED=42` in `src/data/make_dataset.py` and the pinned versions in `requirements.txt`.
 
 #### Cold start
 
@@ -218,7 +222,9 @@ dynamic-pricing/
 ├── README.md
 ├── app.py                              # Streamlit HiTL page
 ├── config.py                           # Paths and reference dates
-├── requirements.txt
+├── requirements.txt                    # Pinned runtime dependencies
+├── requirements-dev.txt                # + pytest
+├── tests/                              # Unit tests: optimizer bounds, cold start, save/load
 ├── assets/                             # Diagrams and images
 ├── data/
 │   └── 03_synthetic/
@@ -248,9 +254,10 @@ dynamic-pricing/
 ### Reproducing the results
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 make clean                              # remove cached artifacts
-make all                                # data + train + evaluate (accuracy + decision quality) + sanity check
+make all                                # data + train + evaluate (accuracy, decisions, cold start) + sanity check
+make test                               # unit tests
 make app                                # launch the Streamlit page
 
 # Or run the CLI examples directly:
