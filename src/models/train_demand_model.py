@@ -33,6 +33,15 @@ logging.getLogger('cmdstanpy').setLevel(logging.WARNING)
 warnings.filterwarnings('ignore')
 
 PROPHET_REGRESSORS = ['is_weekday', 'is_holiday']
+XGB_PARAMS = dict(
+    n_estimators=400,
+    learning_rate=0.05,
+    max_depth=5,
+    subsample=0.9,
+    colsample_bytree=0.9,
+    random_state=42,
+    n_jobs=-1,
+)
 
 
 def match_date_for(match_id: int) -> pd.Timestamp:
@@ -95,15 +104,7 @@ def train_ensemble(df: pd.DataFrame) -> tuple[dict, object, XGBRegressor]:
     X_raw = df.drop(columns=[config.TARGET_COLUMN, 'ds'])
     X = feature_pipeline.fit_transform(X_raw)
 
-    xgb = XGBRegressor(
-        n_estimators=400,
-        learning_rate=0.05,
-        max_depth=5,
-        subsample=0.9,
-        colsample_bytree=0.9,
-        random_state=42,
-        n_jobs=-1,
-    )
+    xgb = XGBRegressor(**XGB_PARAMS)
     xgb.fit(X, residuals.values)
 
     prophet_bundle = {
