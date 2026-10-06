@@ -11,10 +11,12 @@ ZONE_BASE_PRICES = {
     'Gol Sud': 75,
 }
 
-# Bounds (as multiples of base price) within which the historical data
-# has meaningful coverage. Outside this band, XGBoost extrapolates and
-# Prophet's residual model can't be trusted.
-PRICE_SEARCH_RANGE_RATIO = (0.5, 2.5)
+# The optimizer only searches prices the zone was actually sold at. Beyond
+# the observed range the trees predict flat sales, so revenue keeps rising
+# with price and the optimizer picks the cap. The band is the 5th-95th
+# percentile of historical prices per zone, computed at training time and
+# saved next to the model (see train_demand_model.price_support).
+PRICE_SUPPORT_QUANTILES = (0.05, 0.95)
 
 
 # A sample of base features for a single data point.

@@ -11,6 +11,7 @@ MODELS_DIR = os.path.join(BASE_DIR, 'models')
 PROPHET_MODELS_PATH = os.path.join(MODELS_DIR, 'prophet_models.joblib')
 XGB_RESIDUAL_MODEL_PATH = os.path.join(MODELS_DIR, 'xgb_residual_model.joblib')
 FEATURE_PIPELINE_PATH = os.path.join(MODELS_DIR, 'feature_pipeline.joblib')
+PRICE_SUPPORT_PATH = os.path.join(MODELS_DIR, 'price_support.json')
 
 # Reference date used to map (match_id, days_until_match) -> a calendar date
 # so Prophet sees a meaningful seasonal axis. Deterministic and embedded

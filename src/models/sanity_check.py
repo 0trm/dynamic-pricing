@@ -3,10 +3,11 @@
 A demand model that ignores price would yield a meaningless optimizer
 ("just pick the price cap"). This script samples a handful of real
 training rows and verifies that predicted sales are non-increasing as
-price rises across the full search range.
+price rises across the full search range, and that the optimum does not
+pile up at the top of the band.
 
 Exits non-zero if more than a small fraction of rows violate monotonic
-non-increase. Counted violations and the worst offender are printed.
+non-increase, or if too many optima sit at the band's upper edge.
 """
 
 import logging
@@ -34,6 +35,7 @@ TOLERATED_PER_STEP_INCREASE = 2          # tickets (integer-rounding wiggle)
 MIN_RELATIVE_SPREAD = 0.20               # (max - min) / max sales must exceed this
 MAX_VIOLATION_FRACTION = 0.25            # at most 25% of sampled rows may violate either rule
 MIN_NONZERO_SAMPLES = 10                 # ignore series with predicted sales ~0 everywhere
+MAX_UPPER_EDGE_FRACTION = 0.40           # optima at the band's top mean the model's elasticity is too weak
 
 
 def evaluate_row(engine: OptimizationEngine, row: pd.DataFrame) -> dict:
@@ -46,6 +48,7 @@ def evaluate_row(engine: OptimizationEngine, row: pd.DataFrame) -> dict:
     relative_spread = spread / max(sales.max(), 1)
     monotonic_fail = worst_increase > TOLERATED_PER_STEP_INCREASE
     flat_fail = sales.max() >= MIN_NONZERO_SAMPLES and relative_spread < MIN_RELATIVE_SPREAD
+    optimal_price = float(curve.loc[curve['projected_revenue'].idxmax(), 'price'])
     return {
         'min_sales': int(sales.min()),
         'max_sales': int(sales.max()),
@@ -53,7 +56,8 @@ def evaluate_row(engine: OptimizationEngine, row: pd.DataFrame) -> dict:
         'relative_spread': round(relative_spread, 2),
         'worst_per_step_increase': worst_increase,
         'violates': monotonic_fail or flat_fail,
-        'optimal_price': float(curve.loc[curve['projected_revenue'].idxmax(), 'price']),
+        'optimal_price': optimal_price,
+        'at_upper_edge': optimal_price >= curve['price'].max() - PRICE_STEP,
     }
 
 
@@ -78,18 +82,26 @@ def main() -> int:
 
     report = pd.DataFrame(results)
     violation_rate = report['violates'].mean()
+    upper_edge_rate = report['at_upper_edge'].mean()
     print("\n--- Elasticity sanity check ---")
     print(report.to_string(index=False))
     print(f"\nSampled rows: {len(report)}")
     print(f"Mean sales spread (max - min across zone-specific range): {report['spread'].mean():.1f} tickets")
     print(f"Median optimal price: €{report['optimal_price'].median():.0f}")
     print(f"Violation rate: {violation_rate:.0%}  (tolerated: <{MAX_VIOLATION_FRACTION:.0%})")
+    print(f"Optima at the band's upper edge: {upper_edge_rate:.0%}  (tolerated: <{MAX_UPPER_EDGE_FRACTION:.0%})")
     print("-------------------------------\n")
 
     if violation_rate > MAX_VIOLATION_FRACTION:
         logging.error(
             "Elasticity check FAILED: too many rows have non-monotonic price-to-sales response. "
             "The optimizer's recommendations cannot be trusted."
+        )
+        return 1
+    if upper_edge_rate > MAX_UPPER_EDGE_FRACTION:
+        logging.error(
+            "Elasticity check FAILED: too many optima sit at the top of the price band. "
+            "The model is underestimating how fast demand falls at high prices."
         )
         return 1
     logging.info("Elasticity check PASSED.")

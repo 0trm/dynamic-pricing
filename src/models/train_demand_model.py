@@ -8,6 +8,7 @@ feature set (price, demand signals, external factors). Final prediction
 is Prophet yhat + XGBoost residual.
 """
 
+import json
 import logging
 import os
 import sys
@@ -23,6 +24,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 sys.path.insert(0, project_root)
 
 import config
+from src.decision_engine.constants import PRICE_SUPPORT_QUANTILES
 from src.features.build_features import build_feature_pipeline
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -73,6 +75,13 @@ def fit_prophet_per_series(df: pd.DataFrame) -> tuple[dict, pd.Series]:
     return prophet_models, yhat
 
 
+def price_support(df: pd.DataFrame) -> dict[str, tuple[int, int]]:
+    """Per-zone price band the optimizer may search: the observed 5th-95th percentile of historical prices."""
+    lo_q, hi_q = PRICE_SUPPORT_QUANTILES
+    bands = df.groupby('seat_zone')['ticket_price'].quantile([lo_q, hi_q]).unstack()
+    return {zone: (int(round(row[lo_q])), int(round(row[hi_q]))) for zone, row in bands.iterrows()}
+
+
 def train_ensemble(df: pd.DataFrame) -> tuple[dict, object, XGBRegressor]:
     """Fit the full ensemble on `df`. Returns (prophet_bundle, feature_pipeline, xgb)."""
     df = add_ds_column(df)
@@ -115,6 +124,10 @@ def main() -> None:
     joblib.dump(prophet_bundle, config.PROPHET_MODELS_PATH)
     joblib.dump(feature_pipeline, config.FEATURE_PIPELINE_PATH)
     joblib.dump(xgb, config.XGB_RESIDUAL_MODEL_PATH)
+    support = price_support(df)
+    with open(config.PRICE_SUPPORT_PATH, 'w') as f:
+        json.dump(support, f, indent=2)
+    logging.info("Optimizer price bands (observed p5-p95 per zone): %s", support)
     logging.info("Saved Prophet bundle, feature pipeline, and XGBoost residual model to %s", config.MODELS_DIR)
 
 

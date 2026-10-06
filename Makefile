@@ -20,5 +20,5 @@ app:
 all: data train evaluate sanity
 
 clean:
-	rm -f models/*.joblib
+	rm -f models/*.joblib models/*.json
 	rm -f proposals.jsonl

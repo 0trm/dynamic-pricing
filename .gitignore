@@ -26,4 +26,5 @@ Thumbs.db
 # Trained artifacts and processed data (regenerable via `make all`)
 data/02_processed/*.csv
 models/*.joblib
+models/*.json
 proposals.jsonl

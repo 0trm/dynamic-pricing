@@ -23,13 +23,12 @@ class SimulationEngine:
         features = base_features.copy()
         features['ticket_price'] = price
 
-        predicted_sales = int(max(0, round(self.model.predict(features)[0])))
-        projected_revenue = price * predicted_sales
+        predicted_sales = float(self.model.predict(features)[0])
 
         return {
             'simulated_price': price,
-            'predicted_sales': predicted_sales,
-            'projected_revenue': projected_revenue,
+            'predicted_sales': int(round(predicted_sales)),
+            'projected_revenue': price * predicted_sales,  # same unrounded basis as the optimizer
         }
 
 

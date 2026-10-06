@@ -9,7 +9,7 @@ import pandas as pd
 import streamlit as st
 
 import config
-from src.decision_engine.optimize import OptimizationEngine, default_price_range_for
+from src.decision_engine.optimize import OptimizationEngine
 from src.decision_engine.simulate import SimulationEngine
 from src.models.predict_demand import DemandModel
 
@@ -19,6 +19,7 @@ ARTIFACTS = [
     config.PROPHET_MODELS_PATH,
     config.XGB_RESIDUAL_MODEL_PATH,
     config.FEATURE_PIPELINE_PATH,
+    config.PRICE_SUPPORT_PATH,
 ]
 
 st.set_page_config(page_title="Dynamic Pricing Engine", layout="wide")
@@ -96,7 +97,7 @@ col_c.metric("Weather forecast", base_row['weather_forecast'])
 
 st.divider()
 st.subheader("Revenue vs. price")
-price_range = default_price_range_for(seat_zone)
+price_range = opt_engine.price_range_for(seat_zone)
 curve = opt_engine.revenue_curve(base_features, price_range=price_range, step=5)
 optimum = curve.loc[curve['projected_revenue'].idxmax()]
 
