@@ -127,6 +127,8 @@ An earlier version searched `0.5×–2.5×` base price, but no training row is p
 
 The engine was validated via **segment-based A/B tests**: a subset of seating zones used the dynamic engine (treatment), the rest stayed on static pricing (control). Tests ran across matches of varying importance to ensure the lift wasn't an artifact of any single event. The +6% revenue lift held alongside a +4% sell-through rate, confirming the engine found market equilibrium rather than simply over-charging.
 
+For the wider context (how data science and experimentation worked in a stadium's ticketing team), see [Data Science at Camp Nou](https://github.com/0trm/data-science-at-camp-nou).
+
 
 ## How the engine works
 
