@@ -1,11 +1,11 @@
 # Dynamic ticket pricing with a human in the loop
 
 <p>
-  <img src="./assets/icons/paper.svg" height="16" align="top" alt=""> <a href="./paper/dynamic-pricing.pdf"><b>Paper</b></a> &nbsp;·&nbsp;
-  <img src="./assets/icons/ci.svg" height="16" align="top" alt=""> <a href="https://github.com/0trm/dynamic-pricing/actions/workflows/ci.yml">CI</a> &nbsp;·&nbsp;
-  <img src="./assets/icons/python.svg" height="16" align="top" alt=""> Python 3.12 &nbsp;·&nbsp;
-  <img src="./assets/icons/models.svg" height="16" align="top" alt=""> Prophet + XGBoost &nbsp;·&nbsp;
-  <img src="./assets/icons/license.svg" height="16" align="top" alt=""> <a href="./LICENSE">MIT</a>
+  <a href="./paper/dynamic-pricing.pdf"><img src="./assets/badges/paper.svg" alt="Paper: PDF"></a>
+  <a href="https://github.com/0trm/dynamic-pricing/actions/workflows/ci.yml"><img src="./assets/badges/ci.svg" alt="CI: GitHub Actions"></a>
+  <img src="./assets/badges/python.svg" alt="Python 3.12">
+  <img src="./assets/badges/models.svg" alt="Models: Prophet + XGBoost">
+  <a href="./LICENSE"><img src="./assets/badges/license.svg" alt="License: MIT"></a>
 </p>
 
 Forecast ticket demand at every candidate price, pick the revenue-maximizing one, and let a pricing analyst approve it in one click. The engine was deployed at a European football club in 2023; this repository is a reimplementation on synthetic data, written up in the paper [*Human-in-the-Loop Dynamic Pricing for Football Tickets*](./paper/dynamic-pricing.pdf).
