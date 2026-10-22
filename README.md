@@ -1,7 +1,6 @@
 # Dynamic pricing engine with HiTL
 
 <p align="left">
-  <a href="https://dynamic-pricing-0trm.streamlit.app/"><img src="https://img.shields.io/badge/Live%20demo-Streamlit-ff4b4b?logo=streamlit&logoColor=white" alt="Live demo"></a>
   <a href="./paper/dynamic-pricing.pdf"><img src="https://img.shields.io/badge/Paper-PDF-b31b1b" alt="Paper"></a>
   <a href="https://github.com/0trm/dynamic-pricing/actions/workflows/ci.yml"><img src="https://github.com/0trm/dynamic-pricing/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/ML-Supervised-lightgrey" alt="ML">
@@ -13,7 +12,7 @@ An ML-powered dynamic pricing and decision support system for ticket pricing in 
 <p align="center">
   <a href="https://dynamic-pricing-0trm.streamlit.app/"><img src="./assets/dp-app.png" alt="Streamlit HiTL page" width="900"></a>
   <br>
-  <em>Pick a match and zone, see the recommended price and the revenue-vs-price curve, then approve. <a href="https://dynamic-pricing-0trm.streamlit.app/">▶ Try the live demo</a>.</em>
+  <em>Pick a match and zone, see the recommended price and the revenue-vs-price curve, then approve. </em>
 </p>
 
 ## Quickstart
