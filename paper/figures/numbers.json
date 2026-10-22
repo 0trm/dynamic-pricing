@@ -1,0 +1,328 @@
+{
+  "data": {
+    "rows": 3367,
+    "series": 37,
+    "matches": 10,
+    "holdout_rows": 518
+  },
+  "accuracy": {
+    "ensemble": {
+      "wape": 0.26375006748952246,
+      "r2": 0.7286732334585404,
+      "mae": 6.154847134774802,
+      "rmse": 11.746061041340955
+    },
+    "prophet": {
+      "wape": 0.41824267115185787,
+      "r2": 0.4826546309339055,
+      "mae": 9.76007221792212,
+      "rmse": 16.219453492516514
+    },
+    "xgb_pooled": {
+      "wape": 0.22559015690130235,
+      "r2": 0.7171194056275754,
+      "mae": 5.264350997341588,
+      "rmse": 11.993543419435994
+    },
+    "naive_last7": {
+      "wape": 0.3740427342346602,
+      "r2": 0.5440532254338514,
+      "mae": 8.728626585769446,
+      "rmse": 15.226602406624428
+    },
+    "naive_mean": {
+      "wape": 0.7965348994468783,
+      "r2": -0.42838531796403956,
+      "mae": 18.58786460330862,
+      "rmse": 26.950611433986946
+    }
+  },
+  "naive_wape_reduction": 0.294866486234015,
+  "decision": {
+    "share_mean": 0.9504939040047475,
+    "share_by_zone": {
+      "Corner": 0.9829512499384692,
+      "North end": 0.9664081709957727,
+      "South end": 0.9714550283684712,
+      "Sideline": 0.9391555983260794,
+      "VIP": 0.9146404987969272
+    },
+    "median_ratio": 1.52,
+    "upper_edge": 0.19305019305019305,
+    "unconstrained_share_mean": 0.2641911925455017,
+    "unconstrained_at_cap": 0.7200772200772201,
+    "unconstrained_share_by_zone": {
+      "Corner": 0.592341786725281,
+      "North end": 0.07978667030026868,
+      "South end": 0.09330915980499158,
+      "Sideline": 0.08686949249231932,
+      "VIP": 0.2876480130999125
+    },
+    "max_train_price_ratio": 1.9,
+    "example_zone": "Sideline",
+    "example_pick_constrained": 1.575,
+    "example_pick_unconstrained": 2.5
+  },
+  "cold_start": {
+    "fallback_median": 0.125419037302372,
+    "fallback_min": 0.09222265671035557,
+    "fallback_max": 0.46411765119056647,
+    "residual_only_median": 0.8982637230638,
+    "unseen_share_mean": 0.9386768540444124,
+    "per_match": [
+      {
+        "match_id": 1,
+        "fallback": 0.46411765119056647,
+        "residual_only": 0.8348969569918409
+      },
+      {
+        "match_id": 2,
+        "fallback": 0.10570975213741243,
+        "residual_only": 0.8865432823718544
+      },
+      {
+        "match_id": 3,
+        "fallback": 0.23589730139776946,
+        "residual_only": 0.8753817542788432
+      },
+      {
+        "match_id": 4,
+        "fallback": 0.11813003436634502,
+        "residual_only": 0.9068454350039535
+      },
+      {
+        "match_id": 5,
+        "fallback": 0.13270804023839897,
+        "residual_only": 0.8954451613251629
+      },
+      {
+        "match_id": 6,
+        "fallback": 0.11205141986431474,
+        "residual_only": 0.901082284802437
+      },
+      {
+        "match_id": 7,
+        "fallback": 0.18975386542158662,
+        "residual_only": 0.8671593116886681
+      },
+      {
+        "match_id": 8,
+        "fallback": 0.11280026555127563,
+        "residual_only": 0.9066856887992057
+      },
+      {
+        "match_id": 9,
+        "fallback": 0.2512655593902743,
+        "residual_only": 0.9350014429492092
+      },
+      {
+        "match_id": 10,
+        "fallback": 0.09222265671035557,
+        "residual_only": 0.9153937544415652
+      }
+    ]
+  },
+  "price_support": {
+    "Corner": [
+      55,
+      146
+    ],
+    "North end": [
+      44,
+      120
+    ],
+    "South end": [
+      46,
+      121
+    ],
+    "Sideline": [
+      72,
+      195
+    ],
+    "VIP": [
+      150,
+      398
+    ]
+  },
+  "panel": {
+    "match_id": 5,
+    "days_until_match": 10,
+    "opponent_tier": "A++",
+    "weather": "Sunny",
+    "selected_zone": "Sideline",
+    "availability_pct": 0.7986,
+    "queue": [
+      {
+        "zone": "Sideline",
+        "current_price": 183.26,
+        "recommended_price": 187.0,
+        "predicted_sales": 32.63554126910052,
+        "projected_revenue": 6102.846217321798,
+        "current_revenue": 5980.789292975362,
+        "at_upper_edge": false,
+        "band": [
+          72,
+          195
+        ],
+        "curve": [
+          [
+            72.0,
+            3730.2875847041714
+          ],
+          [
+            77.0,
+            3993.7053268518
+          ],
+          [
+            82.0,
+            4169.147341918129
+          ],
+          [
+            87.0,
+            4424.071042622887
+          ],
+          [
+            92.0,
+            4739.062374095467
+          ],
+          [
+            97.0,
+            5047.890308732719
+          ],
+          [
+            102.0,
+            5282.538506278907
+          ],
+          [
+            107.0,
+            5202.267279768089
+          ],
+          [
+            112.0,
+            5105.230702915473
+          ],
+          [
+            117.0,
+            4927.229969912039
+          ],
+          [
+            122.0,
+            5051.521484680823
+          ],
+          [
+            127.0,
+            4866.359331332083
+          ],
+          [
+            132.0,
+            5056.5558672915095
+          ],
+          [
+            137.0,
+            5100.820497504476
+          ],
+          [
+            142.0,
+            5241.96533668656
+          ],
+          [
+            147.0,
+            5399.936088821065
+          ],
+          [
+            152.0,
+            5465.755583440618
+          ],
+          [
+            157.0,
+            5518.154770185491
+          ],
+          [
+            162.0,
+            5515.803609077656
+          ],
+          [
+            167.0,
+            5477.228660453467
+          ],
+          [
+            172.0,
+            5619.455757711025
+          ],
+          [
+            177.0,
+            5751.399900318584
+          ],
+          [
+            182.0,
+            5929.148372205953
+          ],
+          [
+            187.0,
+            6102.846217321798
+          ],
+          [
+            192.0,
+            5755.611736091007
+          ]
+        ]
+      },
+      {
+        "zone": "South end",
+        "current_price": 102.37,
+        "recommended_price": 106.0,
+        "predicted_sales": 49.90769493130969,
+        "projected_revenue": 5290.215662718827,
+        "current_revenue": 5121.161341204065,
+        "at_upper_edge": false,
+        "band": [
+          46,
+          121
+        ],
+        "curve": null
+      },
+      {
+        "zone": "North end",
+        "current_price": 55.16,
+        "recommended_price": 104.0,
+        "predicted_sales": 44.214067321430555,
+        "projected_revenue": 4598.263001428778,
+        "current_revenue": 2749.333529965307,
+        "at_upper_edge": false,
+        "band": [
+          44,
+          120
+        ],
+        "curve": null
+      },
+      {
+        "zone": "Corner",
+        "current_price": 112.02,
+        "recommended_price": 105.0,
+        "predicted_sales": 34.83135679542305,
+        "projected_revenue": 3657.29246351942,
+        "current_revenue": 3169.3869894836653,
+        "at_upper_edge": false,
+        "band": [
+          55,
+          146
+        ],
+        "curve": null
+      },
+      {
+        "zone": "VIP",
+        "current_price": 407.27,
+        "recommended_price": 395.0,
+        "predicted_sales": 2.032730988863415,
+        "projected_revenue": 802.928740601049,
+        "current_revenue": 827.870349834403,
+        "at_upper_edge": true,
+        "band": [
+          150,
+          398
+        ],
+        "curve": null
+      }
+    ]
+  }
+}

@@ -2,6 +2,7 @@
 
 <p align="left">
   <a href="https://dynamic-pricing-0trm.streamlit.app/"><img src="https://img.shields.io/badge/Live%20demo-Streamlit-ff4b4b?logo=streamlit&logoColor=white" alt="Live demo"></a>
+  <a href="./paper/dynamic-pricing.pdf"><img src="https://img.shields.io/badge/Paper-PDF-b31b1b" alt="Paper"></a>
   <a href="https://github.com/0trm/dynamic-pricing/actions/workflows/ci.yml"><img src="https://github.com/0trm/dynamic-pricing/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/ML-Supervised-lightgrey" alt="ML">
   <img src="https://img.shields.io/badge/Models-Prophet%20%2B%20XGBoost-lightgrey" alt="Models">
@@ -110,7 +111,7 @@ Forecast accuracy is not the goal; the price is. Because the data is synthetic, 
 | **Median recommended price** | 1.52× base (true optimum 1.25×) |
 | **Recommendations at the band's upper edge** | 19% |
 
-An earlier version searched `0.5×–2.5×` base price, but no training row is priced above 1.91× base. Past that point the trees predict flat sales, revenue keeps rising with price, and 42% of recommendations landed at the cap, earning **45%** of the best achievable revenue. The optimizer now searches only the prices each zone was actually sold at (5th–95th percentile, computed at training time). The remaining upper-edge share means the model still underestimates how fast demand falls at high prices.
+Searching `0.5×–2.5×` base price instead fails, because no training row is priced above 1.91× base. Past that point the trees predict flat sales, revenue keeps rising with price, and the same model sends 72% of recommendations to the cap, earning **26%** of the best achievable revenue. The optimizer now searches only the prices each zone was actually sold at (5th–95th percentile, computed at training time). The remaining upper-edge share means the model still underestimates how fast demand falls at high prices.
 
 `make sanity` guards against both failure modes: it samples 20 historical rows, sweeps each through the zone's band, and fails if predicted sales don't move with price (at least 20% relative spread, monotone within 2 tickets per step) or if more than 40% of optima sit at the band's upper edge. Latest run: **0% violations**, **35% at the upper edge**, **median optimal price €132**.
 
