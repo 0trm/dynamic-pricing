@@ -1,11 +1,11 @@
 # Dynamic ticket pricing with a human in the loop
 
 <p>
-  <a href="./paper/dynamic-pricing.pdf"><img src="./assets/badges/paper.svg" alt="Paper: PDF"></a>
-  <a href="https://github.com/0trm/dynamic-pricing/actions/workflows/ci.yml"><img src="./assets/badges/ci.svg" alt="CI: GitHub Actions"></a>
-  <img src="./assets/badges/python.svg" alt="Python 3.12">
-  <img src="./assets/badges/models.svg" alt="Models: Prophet + XGBoost">
-  <a href="./LICENSE"><img src="./assets/badges/license.svg" alt="License: MIT"></a>
+  <a href="./paper/dynamic-pricing.pdf"><img src="https://img.shields.io/badge/Paper_(PDF)-f6f8fa?style=flat-square&logo=typst&logoColor=57606a" alt="Paper (PDF)"></a>
+  <a href="https://github.com/0trm/dynamic-pricing/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/0trm/dynamic-pricing/ci.yml?branch=master&label=CI&style=flat-square&labelColor=f6f8fa&color=eaeef2&logo=githubactions&logoColor=57606a" alt="CI"></a>
+  <img src="https://img.shields.io/badge/Python_3.12-f6f8fa?style=flat-square&logo=python&logoColor=57606a" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/Prophet_%2B_XGBoost-f6f8fa?style=flat-square" alt="Prophet + XGBoost">
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/MIT_license-f6f8fa?style=flat-square&logo=opensourceinitiative&logoColor=57606a" alt="MIT license"></a>
 </p>
 
 Forecast ticket demand at every candidate price, pick the revenue-maximizing one, and let a pricing analyst approve it in one click. The engine was deployed at a European football club in 2023; this repository is a reimplementation on synthetic data, written up in the paper [*Human-in-the-Loop Dynamic Pricing for Football Tickets*](./paper/dynamic-pricing.pdf).

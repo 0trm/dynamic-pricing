@@ -27,7 +27,6 @@ figures:
 	$(PYTHON) paper/figures.py
 	typst compile --root . paper/dynamic-pricing.typ
 	for f in context architecture panel; do typst compile --root . --input fig=$$f --format svg paper/readme-figures.typ assets/$$f.svg; done
-	for b in paper ci python models license; do typst compile --root . --input fig=badge-$$b --format svg paper/readme-figures.typ assets/badges/$$b.svg; done
 
 clean:
 	rm -f models/*.joblib models/*.json
