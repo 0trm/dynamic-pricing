@@ -42,7 +42,7 @@
   #text(size: 16pt, weight: "bold")[Human-in-the-Loop Dynamic Pricing for Football Tickets]
   #v(0.9em)
   #text(size: 11pt)[Tomás Ravalli#super[\*]]\
-  #text(size: 9pt)[ML Engineer · #link("mailto:hello@0trm.dev")[hello\@0trm.dev]]
+  #text(size: 9pt)[Data Scientist · #link("mailto:hello@0trm.dev")[hello\@0trm.dev]]
   #v(1.2em)
   #block(width: 88%)[
     #set par(justify: true)
