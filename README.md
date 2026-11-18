@@ -128,7 +128,7 @@ CI runs `make all` and `make test` on every push. To rebuild the paper and its f
 | Team status | `team_position`, `top_player_injured`, `league_winner_known` |
 | Ticket & zone | `seat_zone`, `ticket_price`, `ticket_availability_pct`, `zone_seats_availability` |
 | Demand signals | `internal_search_trends`, `google_trends_index`, `social_media_sentiment`, `web_visits` |
-| External | `is_holiday`, `popular_concert_in_city`, `competitor_avg_price`, `flights_to_barcelona_index`, `weather_forecast` |
+| External | `is_holiday`, `popular_concert_in_city`, `competitor_avg_price`, `inbound_flights_index`, `weather_forecast` |
 
 Target: `zone_historical_sales`, tickets sold per zone and day.
 

@@ -69,9 +69,9 @@
     enclosure((<cluster>, <forecast>, <decide>, <rules>), accent),
     node((2.5, -0.5), text(size: 6.5pt, fill: accent)[*Decision module*], stroke: none),
 
-    person((4.7, 2.5), align(center)[*Analyst panel*\ #small[human in the loop]], name: <panel>, width: 62pt),
-    ext((6.3, 2.5), align(center)[Ticketing\ platform], name: <ticket>, width: 52pt),
-    ext((6.3, 0.5), align(center)[Fan purchase\ page], name: <fan>, width: 52pt),
+    person((5.4, 2.5), align(center)[*Analyst panel*\ #small[human in the loop]], name: <panel>, width: 62pt),
+    ext((7.3, 2.5), align(center)[Ticketing\ platform], name: <ticket>, width: 52pt),
+    ext((7.3, 0.5), align(center)[Fan purchase\ page], name: <fan>, width: 52pt),
 
     edge(<s1>, <ingest>, "-|>"),
     edge(<s2>, <ingest>, "-|>"),
@@ -82,10 +82,10 @@
     edge(<cluster>, <forecast>, "-|>"),
     edge(<forecast>, <decide>, "-|>"),
     edge(<rules>, <decide>, "-|>", lbl[hard rules], label-side: left),
-    edge(<decide>, <panel>, "-|>", lbl[proposals,\ warnings], label-side: left, label-pos: 0.6),
-    edge(<panel>, <decide>, "-|>", lbl[what-if price], bend: 45deg, label-side: right),
+    edge(<decide>, <panel>, "-|>", lbl[proposals,\ warnings], label-side: left, label-pos: 0.7),
+    edge(<panel>, <decide>, "-|>", lbl[what-if price], bend: 45deg, label-side: left),
     edge(<panel>, <ticket>, "-|>", lbl[approved\ price (API)], label-side: left, label-pos: 0.5),
     edge(<ticket>, <fan>, "-|>", lbl[new prices,\ price-drop\ alerts], label-side: left),
-    edge(<ticket>, (6.3, 4.1), (0, 4.1), <s4>, "-|>", lbl[new sales feed the next forecast], label-pos: 0.5, label-side: left, stroke: (dash: "dashed")),
+    edge(<ticket>, (7.3, 4.1), (0, 4.1), <s4>, "-|>", lbl[new sales feed the next forecast], label-pos: 0.5, label-side: left, stroke: (dash: "dashed")),
   )
 }

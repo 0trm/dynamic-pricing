@@ -25,7 +25,7 @@ NUMERICAL_FEATURES = [
     'social_media_sentiment',
     'google_trends_index',
     'internal_search_trends',
-    'flights_to_barcelona_index',
+    'inbound_flights_index',
     'competitor_avg_price',
     'zone_seats_availability',
     'ticket_availability_pct',
