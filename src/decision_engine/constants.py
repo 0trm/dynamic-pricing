@@ -36,7 +36,7 @@ SAMPLE_BASE_FEATURES = {
     'is_holiday': False,
     'popular_concert_in_city': False,
     'weather_forecast': 'Sunny',
-    'flights_to_barcelona_index': 110,
+    'inbound_flights_index': 110,
     'google_trends_index': 85,
     'internal_search_trends': 3500,
     'web_visits': 80000,

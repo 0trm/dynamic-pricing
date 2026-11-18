@@ -42,7 +42,8 @@
   #text(size: 16pt, weight: "bold")[Human-in-the-Loop Dynamic Pricing for Football Tickets]
   #v(0.9em)
   #text(size: 11pt)[Tomás Ravalli#super[\*]]\
-  #text(size: 9pt)[Data Scientist · #link("mailto:hello@0trm.dev")[hello\@0trm.dev]]
+  #text(size: 9pt)[Data Scientist · #link("mailto:hello@0trm.dev")[hello\@0trm.dev]]\
+  #text(size: 9pt)[October 2026 · working paper, not peer reviewed]
   #v(1.2em)
   #block(width: 88%)[
     #set par(justify: true)
@@ -69,7 +70,7 @@ Dynamic pricing in professional sport is not new @drayer2012dynamic, and the rev
 
 + *A forecast-then-optimize engine* that combines per-series Prophet models @taylor2018prophet with a pooled XGBoost residual model @chen2016xgboost, plus a pooled fallback for fixtures with no sales history yet.
 + *A support-constrained price search.* Restricting the grid search to prices each zone was actually sold at raised the revenue share of recommendations from 26% to 95% on synthetic data.
-+ *A human-in-the-loop workflow* in which analysts simulate, approve or reject each proposal, which reached 86% adoption.
++ *A human-in-the-loop workflow* in which analysts simulate, approve or reject each proposal, in which analysts approved 86% of proposals.
 + *Deployment evidence* from segment-based A/B tests at a European football club, and a reimplementation on synthetic data.
 
 = Problem setting
@@ -168,7 +169,7 @@ The club's data cannot be shared, so the method is evaluated with a reimplementa
 
 The generator produces 10 matches of varied attractiveness, each with a 91-day daily sales window, across up to five zones (VIP, sideline, corner and two end stands), with some zone-match pairs randomly dropped to mimic gaps in real data; 37 series and 3,367 zone-days remain. A single "match excitement factor" built from opponent tier, league position, injuries, match importance, holidays and weekday drives both the demand signals and the price level. Prices also carry wide operational variation (promotions, discounts, tests), which is what lets a model identify the price effect from history. Demand keeps a share $max(0.02, 1 - r slash 2.5)$ of its potential at price ratio $r = p slash p_"base"$, so revenue peaks at $r = 1.25$. All synthetic results below come from one run with pinned library versions (Python 3.12, macOS arm64); runs on Linux differ slightly.
 
-The last 14 days of every series form the holdout. All models are retrained from scratch on the first 77 days, so no holdout information leaks into training. The main reference is a naive forecast anyone could make at the cutoff without a model: each series' mean daily sales over its last seven training days.
+The last 14 days of every series form the holdout. All models are retrained from scratch on the first 77 days, so no holdout information leaks into training. Each holdout row keeps that day's own demand signals and seat availability, as the engine has them every morning, so the models are scored one day ahead while the naive forecast is fixed at the cutoff. No training row is closer than 14 days to kick-off, so the pooled model extrapolates along days until match. The main reference is a naive forecast anyone could make at the cutoff without a model: each series' mean daily sales over its last seven training days.
 
 == Forecast accuracy
 
@@ -209,7 +210,7 @@ Forecast accuracy is not the goal; the price is. For every holdout row, the opti
 
 == Cold start
 
-To mimic a fixture that has just gone on sale, each match is left out of training in turn and forecast as unseen (@fig:coldstart). Without a fallback the median WAPE across the 10 matches is 89.8%. The pooled XGBoost brings it to 12.5% (9.2% to 46.4% across matches), and its recommendations on unseen matches earn 94% of the best achievable revenue.
+To mimic a fixture that has just gone on sale, each match is left out of training in turn and forecast as unseen (@fig:coldstart). Without a fallback the median WAPE across the 10 matches is 89.8%. The pooled XGBoost brings it to 12.5% (9.2% to 46.4% across matches), and its recommendations on unseen matches earn 94% of the best achievable revenue. These errors cover all 91 days of an unseen match, with the other matches' final days in training, so they are not comparable with the 14-day holdout of @tab:accuracy.
 
 #figure(
   image("figures/cold_start.svg", width: 100%),
@@ -254,7 +255,7 @@ Revenue and sell-through rose together. Had the gain come only from charging mor
 
 = Conclusion
 
-A forecast-then-optimize engine with a human approval step moved a football club from seasonal, manual price lists to daily, data-driven prices, and delivered +6% revenue per match with +4% sell-through and 86% adoption. The method uses standard tools; what made it work was constraining the price search to observed data, evaluating decisions rather than forecasts, and keeping analysts in control. Appendix A summarizes the model in the model card format of Mitchell et al. @mitchell2019modelcards.
+A forecast-then-optimize engine with a human approval step moved a football club from seasonal, manual price lists to daily, data-driven prices, and delivered +6% revenue per match with +4% sell-through and 86% of proposals approved. The method uses standard tools; what made it work was constraining the price search to observed data, evaluating decisions rather than forecasts, and keeping analysts in control. Appendix A summarizes the model in the model card format of Mitchell et al. @mitchell2019modelcards.
 
 #set par(first-line-indent: 0em)
 #show bibliography: set text(size: 8.5pt)

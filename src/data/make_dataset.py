@@ -172,7 +172,7 @@ def main():
     df['team_position'] = df.apply(lambda row: random.randint(1, 5) if row['days_until_match'] > 30 else random.randint(1, 3), axis=1)
     df['is_holiday'] = df['days_until_match'].apply(lambda x: x in [0, 1, 6, 7, 45, 46]) # RENAMED
     df['popular_concert_in_city'] = df['days_until_match'].apply(lambda x: x in [20, 21, 22]) # RENAMED
-    df['flights_to_barcelona_index'] = df.apply(lambda row: int(np.clip(row['google_trends_index'] * random.uniform(0.8, 1.2), 20, 100)), axis=1)
+    df['inbound_flights_index'] = df.apply(lambda row: int(np.clip(row['google_trends_index'] * random.uniform(0.8, 1.2), 20, 100)), axis=1)
     df['internal_search_trends'] = df['web_visits'].apply(lambda x: int(x / 10 * random.uniform(0.8, 1.2)))
     df['web_conversion_rate'] = df.apply(lambda row: np.clip(row['zone_historical_sales'] / (row['web_visits'] + 1e-6), 0, 0.1), axis=1)
     df['competitor_avg_price'] = df['ticket_price'].apply(lambda x: x * random.uniform(0.8, 1.2))
@@ -182,7 +182,7 @@ def main():
         'match_id', 'days_until_match', 'seat_zone', 'zone_historical_sales', 'ticket_price',
         'ea_opponent_strength', 'web_visits', 'weather_forecast', 'is_weekday', 'is_international',
         'opponent_tier', 'top_player_injured', 'league_winner_known', 'team_position', 'is_holiday',
-        'popular_concert_in_city', 'flights_to_barcelona_index', 'google_trends_index',
+        'popular_concert_in_city', 'inbound_flights_index', 'google_trends_index',
         'internal_search_trends', 'social_media_sentiment', 'web_conversion_rate',
         'zone_seats_availability', 'ticket_availability_pct', 'competitor_avg_price'
     ]
